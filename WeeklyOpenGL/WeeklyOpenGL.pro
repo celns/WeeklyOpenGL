@@ -18,7 +18,8 @@ SOURCES += \
         glad.c \
         glmain.cpp \
         glwindow.cpp \
-        shader.cpp
+        shader.cpp \
+        stb_image.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

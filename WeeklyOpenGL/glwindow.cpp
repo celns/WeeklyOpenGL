@@ -3,6 +3,11 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "shader.h"
+#include "stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 
 GLWindow::GLWindow(int width, int height)
@@ -49,10 +54,11 @@ int GLWindow::TickWindow()
 
     //设置顶点数据
     float vertices[] = {
-        0.5f,0.5f,0.0f,
-        0.5f,-0.5f,0.0f,
-        -0.5f,-0.5f,0.0f,
-        -0.5f,0.5f,0.0f
+        //positions        //colors         //texture coords
+        0.5f,0.5f,0.0f,    1.0f,0.0f,0.0f,  1.0f,1.0f,
+        0.5f,-0.5f,0.0f,    0.0f,1.0f,0.0f,  1.0f,0.0f,
+        -0.5f,-0.5f,0.0f,   0.0f,0.0f,1.0f,  0.0f, 0.0f,
+        -0.5f,0.5f,0.0f,     1.0f,1.0f,0.0f,  0.0f, 1.0f
     };
 
     unsigned int indices[] = {
@@ -75,16 +81,68 @@ int GLWindow::TickWindow()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices),indices,GL_STATIC_DRAW);
 
-
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 3 * sizeof(float), (void*)0);
+    //顶点属性
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    //颜色属性
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    //纹理颜色
+    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    //载入并创建纹理
+    unsigned int texture1, texture2;
+    //texture1
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    //设置texture的wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //设置texture的filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    //载入图片，创建texture并生成mipmaps
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load("../Textures/container.jpg",&width,&height,&nrChannels,0);
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        cout<<"Failed to load texture"<<endl;
+    }
+    stbi_image_free(data);
 
+    //texture2
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+    //设置texture的wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //设置texture的filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    data = stbi_load("../Textures/awesomeface.png",&width, &height, &nrChannels, 0);
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        cout<<"Failed to load texture"<<endl;
+    }
+    stbi_image_free(data);
 
+    shader->Use();
+    glUniform1i(glGetUniformLocation(shader->ID, "texture1"), 0);
 
+    shader->SetInt("texture2", 1);
 
     //渲染循环
     while(!glfwWindowShouldClose(window))
@@ -96,8 +154,12 @@ int GLWindow::TickWindow()
         glClearColor(0.2f,0.2f,0.3f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //绘制三角形
-//        glUseProgram(shaderProgram);
+        //texture绑定
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
         shader->Use();
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6 , GL_UNSIGNED_INT, 0);
@@ -113,8 +175,6 @@ int GLWindow::TickWindow()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
-
 
 
     //终止glfw，释放资源
