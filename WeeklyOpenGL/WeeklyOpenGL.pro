@@ -15,19 +15,27 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        1_3_shader.cpp \
-        glad.c
+        glad.c \
+        glmain.cpp \
+        glwindow.cpp \
+        shader.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-win32:CONFIG(release, debug|release): LIBS += -LD:/Programs/OpenGL/lib-mingw-w64/ -lglfw3
-else:win32:CONFIG(debug, debug|release): LIBS += -LD:/Programs/OpenGL/lib-mingw-w64/ -lglfw3dll
-else:unix: LIBS += -LD:/Programs/OpenGL/lib-mingw-w64/ -lglfw3
+win32:CONFIG(release, debug|release): LIBS += -LD:/Programs/OpenGL/lib-vc2019/ -lglfw3
+else:win32:CONFIG(debug, debug|release): LIBS += -LD:/Programs/OpenGL/lib-vc2019/ -lglfw3dll
+else:unix: LIBS += -LD:/Programs/OpenGL/lib-vc2019/ -lglfw3
 
 INCLUDEPATH += D:/Programs/OpenGL/include
-#DEPENDPATH += D:/Programs/OpenGL/include
+DEPENDPATH += D:/Programs/OpenGL/include
 
 DISTFILES +=
+
+HEADERS += \
+    glwindow.h \
+    shader.h
+
+RESOURCES +=
