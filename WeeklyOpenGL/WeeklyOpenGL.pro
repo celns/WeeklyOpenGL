@@ -15,6 +15,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        camera.cpp \
         glad.c \
         glmain.cpp \
         glwindow.cpp \
@@ -36,6 +37,7 @@ DEPENDPATH += D:/Programs/OpenGL/include
 DISTFILES +=
 
 HEADERS += \
+    camera.h \
     glwindow.h \
     shader.h
 
