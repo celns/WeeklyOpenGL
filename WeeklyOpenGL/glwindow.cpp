@@ -140,8 +140,9 @@ int GLWindow::TickWindow()
     stbi_image_free(data);
 
     shader->Use();
-    glUniform1i(glGetUniformLocation(shader->ID, "texture1"), 0);
+    //glUniform1i(glGetUniformLocation(shader->ID, "texture1"), 0);
 
+    shader->SetInt("texture2", 1);
     shader->SetInt("texture2", 1);
 
     //渲染循环
@@ -160,7 +161,26 @@ int GLWindow::TickWindow()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        //激活shader
         shader->Use();
+
+        //transformations
+        //initialize matrix
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-55.0f),glm::vec3(1.f, 0.f,0.f));
+        view = glm::translate(view, glm::vec3(0.0f, 0.f, -3.f));
+        projection = glm::perspective(glm::radians(45.f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.f);
+        //定位uniformLocation
+        unsigned int modeLoc = glGetUniformLocation(shader->ID, "model");
+        unsigned int viewLoc = glGetUniformLocation(shader->ID, "view");
+        //传值到shader
+        glUniformMatrix4fv(modeLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+        shader->SetMat4("projection", projection);
+
+
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6 , GL_UNSIGNED_INT, 0);
 
